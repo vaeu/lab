@@ -7,13 +7,13 @@ into `/bin/` and add it as a `systemd` system service.
 
 ## Measures I’ve undertaken to complete this task (all in present tense)
 
-1. Create master VM and copy my public SSH key onto it:
+Create master VM and copy my public SSH key onto it:
 
 ```sh
 $ ssh-copy-id vm@192.168...
 ```
 
-1. Disable password authentication for master VM:
+Disable password authentication for master VM:
 
 ```sh
 $ ssh vm@192.168...
@@ -34,7 +34,7 @@ $ sudo sed -i 's/.*/t/' /etc/hostname # ‘t’ stands for ‘target’
 $ sudo sed -i 's/.*/c/' /etc/hostname # ‘c’ stands for ‘controller’
 ```
 
-1. Change hosts of both VMs:
+Change hosts of both VMs:
 
 ```sh
 # connecting to target VM via ssh and then changing its hosts
@@ -43,12 +43,13 @@ $ printf '127.0.0.1\tlocalhost t\n::1\t\tlocalhost t\n' | sudo tee /etc/hosts
 $ printf '127.0.0.1\tlocalhost c\n::1\t\tlocalhost c\n' | sudo tee /etc/hosts
 ```
 
-1. Reboot both VMs for all changes to take place:
+Reboot both VMs for all changes to take place:
 
 ```sh
 $ sudo /sbin/shutdown -r now
 ```
-1. Manipulate both machines easily with the help of an alias:
+
+Manipulate both machines easily with the help of an alias:
 
 ```sh
 cat >> ~/.ssh/config <<EOF
@@ -61,8 +62,15 @@ Host target
 EOF
 ```
 
-1. Create an inventory file on our controller VM for target one (I’m
-   aware of Ansible Vault, don’t care for now):
+Update repos and install Ansible:
+
+```sh
+$ sudo yum -y update
+# waiting for 1.6k packages to be updated lol
+```
+
+Create an inventory file on our controller VM for target one (I’m aware
+of Ansible Vault, don’t care for now):
 
 ```sh
 $ ssh controller
