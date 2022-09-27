@@ -7,37 +7,44 @@ into `/bin/` and add it as a `systemd` system service.
 
 ## Measures I’ve undertaken to complete this task (all in present tense)
 
-1. Create both the controller and the target Ansible VMs just for fun.
-1. Copy my public SSH key onto the machines to avoid entering passwords
-   all the time:
+1. Create master VM and copy my public SSH key onto it:
 
 ```sh
-for h in 192.168.1.{32,242}; do ssh-copy-id vm@${h}; done
+$ ssh-copy-id vm@192.168...
 ```
 
-1. Disable password authentication for both machines:
+1. Disable password authentication for master VM:
 
 ```sh
-# connecting to each machine and changing the value
+$ ssh vm@192.168...
 $ sudo sed -i '/^PasswordAuth/ s/yes/no/' /etc/ssh/sshd_config
-# restarting the sshd service
-$ sudo systemctl restart sshd
+$ sudo systemctl restart sshd  # restarting the sshd service
 ```
 
+1. Create both the controller and the target Ansible VMs by cloning our
+   master VM.
+1. Generate new MAC addresses for each cloned VM so that new local IPs
+   get assigned to these machines.
 1. Change hostnames of both VMs for clarity’s sake:
 
 ```sh
-# connecting to target VM via ssh
+# connecting to target VM via ssh and then changing its hostname
 $ sudo sed -i 's/.*/t/' /etc/hostname # ‘t’ stands for ‘target’
-# connecting to controller VM via ssh
+# connecting to controller VM via ssh and then changing its hostname
 $ sudo sed -i 's/.*/c/' /etc/hostname # ‘c’ stands for ‘controller’
 ```
 
 1. Change hosts of both VMs:
 
 ```sh
-# connecting to target VM via ssh
+# connecting to target VM via ssh and then changing its hosts
 $ printf '127.0.0.1\tlocalhost t\n::1\t\tlocalhost t\n' | sudo tee /etc/hosts
-# connecting to controller VM via ssh
+# connecting to controller VM via ssh and then changing its hosts
 $ printf '127.0.0.1\tlocalhost c\n::1\t\tlocalhost c\n' | sudo tee /etc/hosts
+```
+
+1. Reboot both VMs for all changes to take place:
+
+```sh
+$ sudo /sbin/shutdown -r now
 ```
