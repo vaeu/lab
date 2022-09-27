@@ -48,3 +48,25 @@ $ printf '127.0.0.1\tlocalhost c\n::1\t\tlocalhost c\n' | sudo tee /etc/hosts
 ```sh
 $ sudo /sbin/shutdown -r now
 ```
+1. Manipulate both machines easily with the help of an alias:
+
+```sh
+cat >> ~/.ssh/config <<EOF
+Host controller
+  Hostname 192.168...
+  User c
+Host target
+  Hostname 192.168...
+  User t
+EOF
+```
+
+1. Create an inventory file on our controller VM for target one (I’m
+   aware of Ansible Vault, don’t care for now):
+
+```sh
+$ ssh controller
+$ mkdir nginx
+$ cd !$
+$ echo "t ansible_host=192.168... ansible_ssh_pass=crap" > inventory.yml
+```
