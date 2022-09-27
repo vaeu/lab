@@ -62,11 +62,13 @@ Host target
 EOF
 ```
 
-Update repos and install Ansible:
+Update repos and install Ansible on our controller VM:
 
 ```sh
 $ sudo yum -y update
-# waiting for 1.6k packages to be updated lol
+# add EPEL repo that comes with not-so-outdated Ansible package
+$ sudo yum -y install epel-release
+$ sudo yum -y install ansible
 ```
 
 Create an inventory file on our controller VM for target one (I’m aware
@@ -77,4 +79,17 @@ $ ssh controller
 $ mkdir nginx
 $ cd !$
 $ echo "t ansible_host=192.168... ansible_ssh_pass=crap" > inventory.yml
+```
+
+Test whether our target machine can be accessed by Ansible:
+
+```sh
+$ ansible t -m ping -i inventory.yml
+t | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
 ```
