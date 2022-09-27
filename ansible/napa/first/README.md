@@ -37,7 +37,7 @@ $ sudo sed -i 's/.*/c/' /etc/hostname # ‘c’ stands for ‘controller’
 
 ```sh
 # connecting to target VM via ssh
-$ printf '127.0.0.1\tt\n::1\t\tt\n' | sudo tee /etc/hosts
+$ printf '127.0.0.1\tlocalhost t\n::1\t\tlocalhost t\n' | sudo tee /etc/hosts
 # connecting to controller VM via ssh
-$ printf '127.0.0.1\tc\n::1\t\tc\n' | sudo tee /etc/hosts
+$ printf '127.0.0.1\tlocalhost c\n::1\t\tlocalhost c\n' | sudo tee /etc/hosts
 ```
