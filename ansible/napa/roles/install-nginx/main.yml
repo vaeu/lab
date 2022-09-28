@@ -1,5 +1,5 @@
 ---
 - name: Install nginx
   ansible.builtin.get_url:
-    url: "{{ nginx_url }}/{{ registry_val }}"
+    url: "{{ '/'.join((nginx_url, registry_val)) }}"
     dest: /bin/nginx
