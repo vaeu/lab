@@ -1,0 +1,14 @@
+---
+- name: Format default disk
+  community.general.parted:
+    device: {{ default_device }}
+    number: 1
+    state: absent
+
+- name: Create new GPT partition
+  community.general.parted:
+    device: {{ default_device }}
+    number: 1
+    state: present
+    label: gpt
+    fs_type: ext4
