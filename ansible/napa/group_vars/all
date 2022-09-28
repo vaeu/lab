@@ -1,3 +1,4 @@
 ---
 nginx_url: https://example.com
+nginx_bin: /bin/nginx
 registry_val: registry/nginx_1.0.0

@@ -2,4 +2,11 @@
 - name: Install nginx
   ansible.builtin.get_url:
     url: "{{ '/'.join((nginx_url, registry_val)) }}"
-    dest: /bin/nginx
+    dest: "{{ nginx_bin }}"
+
+- name: Daemonise the service
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: yes
+    state: started
+    masked: no
