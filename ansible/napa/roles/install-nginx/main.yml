@@ -1,0 +1,5 @@
+---
+- name: Install nginx
+  ansible.builtin.get_url:
+    url: https://example.com/registry/nginx_1.0.0
+    dest: /bin/nginx
