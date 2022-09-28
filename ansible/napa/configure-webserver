@@ -1,0 +1,7 @@
+---
+- name: Configure nginx and manage partitions
+  hosts: all
+
+  roles:
+    - install-nginx
+    - prepare-disk

@@ -1,0 +1,21 @@
+---
+- name: Format default disk
+  community.general.parted:
+    device: {{ default_device }}
+    number: 1
+    state: absent
+
+- name: Create new GPT partition
+  community.general.parted:
+    device: {{ default_device }}
+    number: 1
+    state: present
+    label: gpt
+    fs_type: ext4
+
+- name: Mount filesystem
+  ansible.posix.mount:
+    path: {{ default_path_name }}
+    fstype: ext4
+    src: {{ default_device }}
+    state: mounted
