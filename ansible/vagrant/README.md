@@ -4,10 +4,16 @@ Just playing around with things, nothing to see here.
 
 ---
 
-- [SETTING UP VAGRANT](#setting-up-vagrant)
-- [DEALING WITH ANSIBLE](#dealing-with-ansible)
+- [FAMILIARISING MYSELF WITH VAGRANT](#familiarising-myself-with-vagrant)
+  - [SETTING UP VAGRANT](#setting-up-vagrant)
+  - [DEALING WITH ANSIBLE](#dealing-with-ansible)
 
-## SETTING UP VAGRANT
+## FAMILIARISING MYSELF WITH VAGRANT
+
+This is the starting point of my journey into great depths of VM
+management and infrastructure automation.
+
+### SETTING UP VAGRANT
 
 Let’s fetch CentOS 7 box and set it up:
 
@@ -161,7 +167,7 @@ $ sed -i '/# config.vm.provision/a\
 >  end' Vagrantfile
 ```
 
-## DEALING WITH ANSIBLE
+### DEALING WITH ANSIBLE
 
 Wonderful. Let’s create a simple Ansible playbook now:
 
