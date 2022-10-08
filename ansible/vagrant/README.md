@@ -104,7 +104,9 @@ Seems like we have to stop routing our traffic through Tor for this
 shell session and rerun the same command once again:
 
 ```sh
-$ exit
+$ . torsocks off
+Tor mode deactivated. Command will NOT go through Tor anymore.
+$
 $ vagrant up
 Bringing machine 'default' up with 'virtualbox' provider...
 ==> default: Checking if box 'centos/7' version '2004.01' is up to date...
