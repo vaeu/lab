@@ -1,0 +1,8 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: make sure network time protocol is installed
+      ansible.builtin.yum: name=ntp state=present
+    - name: ensure network time protocol is up and running
+      ansible.builtin.service: name=ntpd enabled=yes state=started
