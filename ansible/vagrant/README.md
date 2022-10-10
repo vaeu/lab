@@ -10,6 +10,7 @@ Just playing around with things, nothing to see here.
 - [SAILING ON](#sailing-on)
   - [CRAFTING VAGRANTFILE](#crafting-vagrantfile)
     - [INSTALLING VBOX GUEST ADDITIONS](#installing-vbox-guest-additions)
+  - [MOVING ON TO ANSIBLE](#moving-on-to-ansible)
 
 ## FAMILIARISING MYSELF WITH VAGRANT
 
@@ -448,3 +449,36 @@ Unmounting Virtualbox Guest Additions ISO from: /mnt
 ```
 
 Everything went according to plan, or so it seems.
+
+### MOVING ON TO ANSIBLE
+
+Let’s create an inventory file and specify which IPs belong to which
+group, form a new group that groups all the groups—duh—together and set
+some variables that are going to be applied to all the groups:
+
+```sh
+cat <<EOF > inventory.cfg
+# VMs
+[vms]
+192.168.56.163
+192.168.56.164
+
+# database
+[db]
+192.168.56.165
+
+# a group of two groups
+[clot:children]
+vms
+db
+
+# vars for all the groups
+[clot:vars]
+ansible_user=vagrant
+ansible_ssh_private_key_file=~/.vagrant.d/insecure_private_key
+EOF
+```
+
+We have used the `ansible_ssh_private_key_file` option here deliberately
+since `config.ssh.insert_key` option is set to `false` in our
+`Vagrantfile` file.
