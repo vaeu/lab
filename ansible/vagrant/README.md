@@ -7,6 +7,9 @@ Just playing around with things, nothing to see here.
 - [FAMILIARISING MYSELF WITH VAGRANT](#familiarising-myself-with-vagrant)
   - [SETTING UP VAGRANT](#setting-up-vagrant)
   - [DEALING WITH ANSIBLE](#dealing-with-ansible)
+- [SAILING ON](#sailing-on)
+  - [CRAFTING VAGRANTFILE](#crafting-vagrantfile)
+    - [INSTALLING VBOX GUEST ADDITIONS](#installing-vbox-guest-additions)
 
 ## FAMILIARISING MYSELF WITH VAGRANT
 
@@ -213,3 +216,238 @@ Excellent! Now is a good time to destroy the VM:
 ```
 $ vagrant destroy
 ```
+
+## SAILING ON
+
+The struggle continues.
+
+### CRAFTING VAGRANTFILE
+
+Let’s continue working with the same CentOS box:
+
+```sh
+$ vagrant init centos/7
+A `Vagrantfile` has been placed in this directory. You are now
+ready to `vagrant up` your first virtual environment! Please read
+the comments in the Vagrantfile as well as documentation on
+`vagrantup.com` for more information on using Vagrant.
+```
+
+Now, let’s populate our `Vagrantfile` file with seemingly unsafe
+options, but it should be fine since we’re just testing things:
+
+```sh
+$ sed -i '/^  *config[.]vm[.]box/a\
+> \
+>   config.vm.vbguest.installer_hooks[:before_install] = ["yum install -y epel-release", "sleep 1"]\
+>   config.vm.vbguest.installer_options = { allow_kernel_upgrade: false, enablerepo: true }\
+> \
+>   config.ssh.insert_key = false\
+>   config.vm.synced_folder ".", "/vagrant", disabled: true\
+>   config.vm.provider :virtualbox do |vb|\
+>     vb.memory = 512\
+>     vb.linked_clone = true\
+>   end\
+> \
+>   # first VM\
+>   config.vm.define "vm1" do |app|\
+>     app.vm.hostname = "vm1.test"\
+>     app.vm.network :private_network, ip: "192.168.56.163"\
+>   end\
+> \
+>   # second VM\
+>   config.vm.define "vm2" do |app|\
+>     app.vm.hostname = "vm2.test"\
+>     app.vm.network :private_network, ip: "192.168.56.164"\
+>   end\
+> \
+>   # database server\
+>   config.vm.define "db" do |db|\
+>     db.vm.hostname = "db.test"\
+>     db.vm.network :private_network, ip: "192.168.56.165"\
+>   end' Vagrantfile
+```
+
+The above configuration disables the copying of current working
+directory into `/vagrant` inside the VM; it also caps memory usage at
+512M and uses the linked clone feature of ‘VirtualBox’ that shares
+virtual disks with the main VM, making the machine spin up faster!
+
+Moreover, we specify three dummy servers, one of which acts as some sort
+of database server; each VM gets assigned a manual IP address despite
+‘Vagrant’ being able to automatically generate those by itself.
+
+OK, let’s rock:
+
+```sh
+$ vagrant up
+Bringing machine 'vm1' up with 'virtualbox' provider...
+Bringing machine 'vm2' up with 'virtualbox' provider...
+Bringing machine 'db' up with 'virtualbox' provider...
+==> vm1: Checking if box 'centos/7' version '2004.01' is up to date...
+==> vm1: Clearing any previously set network interfaces...
+==> vm1: Preparing network interfaces based on configuration...
+    vm1: Adapter 1: nat
+    vm1: Adapter 2: hostonly
+==> vm1: Forwarding ports...
+    vm1: 22 (guest) => 2222 (host) (adapter 1)
+==> vm1: Running 'pre-boot' VM customizations...
+==> vm1: Booting VM...
+==> vm1: Waiting for machine to boot. This may take a few minutes...
+    vm1: SSH address: 127.0.0.1:2222
+    vm1: SSH username: vagrant
+    vm1: SSH auth method: private key
+==> vm1: Machine booted and ready!
+==> vm1: Checking for guest additions in VM...
+    vm1: No guest additions were detected on the base box for this VM! Guest
+    vm1: additions are required for forwarded ports, shared folders, host only
+    vm1: networking, and more. If SSH fails on this machine, please install
+    vm1: the guest additions and repackage the box to continue.
+    vm1:
+    vm1: This is not an error message; everything may continue to work properly,
+    vm1: in which case you may ignore this message.
+==> vm1: Setting hostname...
+==> vm1: Configuring and enabling network interfaces...
+==> vm2: Cloning VM...
+==> vm2: Matching MAC address for NAT networking...
+==> vm2: Checking if box 'centos/7' version '2004.01' is up to date...
+==> vm2: Setting the name of the VM: vagrant_vm2_1665318834078_99605
+==> vm2: Fixed port collision for 22 => 2222. Now on port 2200.
+==> vm2: Clearing any previously set network interfaces...
+==> vm2: Preparing network interfaces based on configuration...
+    vm2: Adapter 1: nat
+    vm2: Adapter 2: hostonly
+==> vm2: Forwarding ports...
+    vm2: 22 (guest) => 2200 (host) (adapter 1)
+==> vm2: Running 'pre-boot' VM customizations...
+==> vm2: Booting VM...
+==> vm2: Waiting for machine to boot. This may take a few minutes...
+    vm2: SSH address: 127.0.0.1:2200
+    vm2: SSH username: vagrant
+    vm2: SSH auth method: private key
+==> vm2: Machine booted and ready!
+==> vm2: Checking for guest additions in VM...
+    vm2: No guest additions were detected on the base box for this VM! Guest
+    vm2: additions are required for forwarded ports, shared folders, host only
+    vm2: networking, and more. If SSH fails on this machine, please install
+    vm2: the guest additions and repackage the box to continue.
+    vm2:
+    vm2: This is not an error message; everything may continue to work properly,
+    vm2: in which case you may ignore this message.
+==> vm2: Setting hostname...
+==> vm2: Configuring and enabling network interfaces...
+==> db: Cloning VM...
+==> db: Matching MAC address for NAT networking...
+==> db: Checking if box 'centos/7' version '2004.01' is up to date...
+==> db: Setting the name of the VM: vagrant_db_1665318860465_97790
+==> db: Fixed port collision for 22 => 2222. Now on port 2201.
+==> db: Clearing any previously set network interfaces...
+==> db: Preparing network interfaces based on configuration...
+    db: Adapter 1: nat
+    db: Adapter 2: hostonly
+==> db: Forwarding ports...
+    db: 22 (guest) => 2201 (host) (adapter 1)
+==> db: Running 'pre-boot' VM customizations...
+==> db: Booting VM...
+==> db: Waiting for machine to boot. This may take a few minutes...
+    db: SSH address: 127.0.0.1:2201
+    db: SSH username: vagrant
+    db: SSH auth method: private key
+==> db: Machine booted and ready!
+==> db: Checking for guest additions in VM...
+    db: No guest additions were detected on the base box for this VM! Guest
+    db: additions are required for forwarded ports, shared folders, host only
+    db: networking, and more. If SSH fails on this machine, please install
+    db: the guest additions and repackage the box to continue.
+    db:
+    db: This is not an error message; everything may continue to work properly,
+    db: in which case you may ignore this message.
+==> db: Setting hostname...
+==> db: Configuring and enabling network interfaces...
+```
+
+#### INSTALLING VBOX GUEST ADDITIONS
+
+Seems like we don’t have VBox Guest Additions installed. Let’s fix it
+right away:
+
+```sh
+$ . torsocks on
+Tor mode activated. Every command will be torified for this shell.
+$ vagrant plugin install vagrant-vbguest
+Installing the 'vagrant-vbguest' plugin. This can take a few minutes...
+Fetching micromachine-3.0.0.gem
+Fetching vagrant-vbguest-0.30.0.gem
+Installed the plugin 'vagrant-vbguest (0.30.0)'!
+$ . torsocks off
+Tor mode deactivated. Command will NOT go through Tor anymore.
+$
+$ vagrant destroy
+    db: Are you sure you want to destroy the 'db' VM? [y/N] y
+==> db: Forcing shutdown of VM...
+==> db: Destroying VM and associated drives...
+    vm2: Are you sure you want to destroy the 'vm2' VM? [y/N] y
+==> vm2: Forcing shutdown of VM...
+==> vm2: Destroying VM and associated drives...
+    vm1: Are you sure you want to destroy the 'vm1' VM? [y/N] y
+==> vm1: Forcing shutdown of VM...
+==> vm1: Destroying VM and associated drives...
+$
+$ vagrant up
+<...>
+No package kernel-devel-3.10.0-1127.el7.x86_64 available.
+Error: Nothing to do
+Unmounting Virtualbox Guest Additions ISO from: /mnt
+umount: /mnt: not mounted
+```
+
+A little bit of searching, and [this
+discussion](https://github.com/dotless-de/vagrant-vbguest/discussions/401)
+pops up. Let’s try to make changes to our `Vagrantfile` file and see if
+the proposed solution solves anything:
+
+```sh
+$ sed -i '/^  *app[.]vm[.]network/a\
+>     app.vbguest.installer_hooks[:before_install] = ["yum install -y epel-release", "sleep 1"]\
+>     app.vbguest.installer_options = { allow_kernel_upgrade: false, enablerepo: true }' Vagrantfile
+$
+$ sed -i '/^  *db[.]vm[.]network/a\
+>     db.vbguest.installer_hooks[:before_install] = ["yum install -y epel-release", "sleep 1"]\
+>     db.vbguest.installer_options = { allow_kernel_upgrade: false, enablerepo: true }' Vagrantfile
+$
+$ vagrant up
+<...>
+==> db: Machine booted and ready!
+[db] No Virtualbox Guest Additions installation found.
+==> db: Executing pre-install hooks
+<...>
+Complete!
+Copy iso file /usr/share/virtualbox/VBoxGuestAdditions.iso into the box /tmp/VBoxGuestAdditions.iso
+Mounting Virtualbox Guest Additions ISO to: /mnt
+mount: /dev/loop0 is write-protected, mounting read-only
+Installing Virtualbox Guest Additions 6.1.38 - guest version is unknown
+Verifying archive integrity... All good.
+Uncompressing VirtualBox 6.1.38 Guest Additions for Linux........
+VirtualBox Guest Additions installer
+Copying additional installer modules ...
+Installing additional modules ...
+/opt/VBoxGuestAdditions-6.1.38/bin/VBoxClient: error while loading shared libraries: libX11.so.6: cannot open shared object file: No such file or directory
+/opt/VBoxGuestAdditions-6.1.38/bin/VBoxClient: error while loading shared libraries: libX11.so.6: cannot open shared object file: No such file or directory
+VirtualBox Guest Additions: Starting.
+VirtualBox Guest Additions: Building the VirtualBox Guest Additions kernel
+modules.  This may take a while.
+VirtualBox Guest Additions: To build modules for other installed kernels, run
+VirtualBox Guest Additions:   /sbin/rcvboxadd quicksetup <version>
+VirtualBox Guest Additions: or
+VirtualBox Guest Additions:   /sbin/rcvboxadd quicksetup all
+VirtualBox Guest Additions: Building the modules for kernel
+3.10.0-1127.el7.x86_64.
+Redirecting to /bin/systemctl start vboxadd.service
+Redirecting to /bin/systemctl start vboxadd-service.service
+Unmounting Virtualbox Guest Additions ISO from: /mnt
+==> db: Checking for guest additions in VM...
+==> db: Setting hostname...
+==> db: Configuring and enabling network interfaces...
+```
+
+Everything went according to plan, or so it seems.
