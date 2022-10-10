@@ -239,9 +239,6 @@ options, but it should be fine since we’re just testing things:
 ```sh
 $ sed -i '/^  *config[.]vm[.]box/a\
 > \
->   config.vm.vbguest.installer_hooks[:before_install] = ["yum install -y epel-release", "sleep 1"]\
->   config.vm.vbguest.installer_options = { allow_kernel_upgrade: false, enablerepo: true }\
-> \
 >   config.ssh.insert_key = false\
 >   config.vm.synced_folder ".", "/vagrant", disabled: true\
 >   config.vm.provider :virtualbox do |vb|\
