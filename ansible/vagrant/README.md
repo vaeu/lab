@@ -482,3 +482,613 @@ EOF
 We have used the `ansible_ssh_private_key_file` option here deliberately
 since `config.ssh.insert_key` option is set to `false` in our
 `Vagrantfile` file.
+
+Let’s check out each of our VMs’ hostname:
+
+```sh
+$ ansible clot -i inventory.cfg -a hostname
+The authenticity of host '192.168.56.163 (192.168.56.163)' can't be established.
+ECDSA key fingerprint is SHA256:Ir41x3R2baZ3nMG90j1BeeeaSs3SGxXx7Su7oITubDI.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+192.168.56.163 | CHANGED | rc=0 >>
+vm1.test
+The authenticity of host '192.168.56.164 (192.168.56.164)' can't be established.
+ECDSA key fingerprint is SHA256:e9f07+goAXzaSNFVEFygjjuIDIyKHgV6FCtl55I3IX0.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+192.168.56.164 | CHANGED | rc=0 >>
+vm2.test
+The authenticity of host '192.168.56.165 (192.168.56.165)' can't be established.
+ECDSA key fingerprint is SHA256:uJ2kHFyxgAGPkBB+g3hsId7tVvd5qLBe6rxpfl/WMCg.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+192.168.56.165 | CHANGED | rc=0 >>
+db.test
+```
+
+Let’s see `db`’s memory-related information using the `setup` module and
+then compare the output to the output of `free -h`:
+
+```sh
+$ ansible db -i inventory.cfg -m setup | sed -n '/ansible_memory_mb/,/^\s\{,8\}},$/p'
+        "ansible_memory_mb": {
+            "nocache": {
+                "free": 363,
+                "used": 123
+            },
+            "real": {
+                "free": 124,
+                "total": 486,
+                "used": 362
+            },
+            "swap": {
+                "cached": 4,
+                "free": 2025,
+                "total": 2047,
+                "used": 22
+            }
+        },
+$
+$ ansible db -i inventory.cfg -a "free -h"
+192.168.56.165 | CHANGED | rc=0 >>
+              total        used        free      shared  buff/cache   available
+Mem:           486M         91M        124M        2.3M        271M        380M
+Swap:          2.0G         22M        2.0G
+```
+
+OK, let’s install Network Time Protocol on all the machines:
+
+```sh
+$ ansible clot -i inventory.cfg -b -m ansible.builtin.yum -a "name=ntp state=present"
+192.168.56.164 | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": true,
+    "changes": {
+        "installed": [
+            "ntp"
+        ]
+    },
+    "msg": "",
+    "rc": 0,
+    "results": [
+        "Loaded plugins: fastestmirror\nLoading mirror speeds from cached hostfile\n * base: mirror.sale-dedic.com\n * epel: mirror.logol.ru\n * extras: mirror.sale-dedic.com\n * updates: mirror.sale-dedic.com\nResolving Dependencies\n--> Running transaction check\n---> Package ntp.x86_64 0:4.2.6p5-29.el7.centos.2 will be installed\n--> Processing Dependency: ntpdate = 4.2.6p5-29.el7.centos.2 for package: ntp-4.2.6p5-29.el7.centos.2.x86_64\n--> Processing Dependency: libopts.so.25()(64bit) for package: ntp-4.2.6p5-29.el7.centos.2.x86_64\n--> Running transaction check\n---> Package autogen-libopts.x86_64 0:5.18-5.el7 will be installed\n---> Package ntpdate.x86_64 0:4.2.6p5-29.el7.centos.2 will be installed\n--> Finished Dependency Resolution\n\nDependencies Resolved\n\n================================================================================\n Package              Arch        Version                       Repository\n                                                                           Size\n================================================================================\nInstalling:\n ntp                  x86_64      4.2.6p5-29.el7.centos.2       base      549 k\nInstalling for dependencies:\n autogen-libopts      x86_64      5.18-5.el7                    base       66 k\n ntpdate              x86_64      4.2.6p5-29.el7.centos.2       base       87 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package (+2 Dependent packages)\n\nTotal download size: 701 k\nInstalled size: 1.6 M\nDownloading packages:\n--------------------------------------------------------------------------------\nTotal                                              1.1 MB/s | 701 kB  00:00     \nRunning transaction check\nRunning transaction test\nTransaction test succeeded\nRunning transaction\n  Installing : autogen-libopts-5.18-5.el7.x86_64                            1/3 \n  Installing : ntpdate-4.2.6p5-29.el7.centos.2.x86_64                       2/3 \n  Installing : ntp-4.2.6p5-29.el7.centos.2.x86_64                           3/3 \n  Verifying  : ntpdate-4.2.6p5-29.el7.centos.2.x86_64                       1/3 \n  Verifying  : ntp-4.2.6p5-29.el7.centos.2.x86_64                           2/3 \n  Verifying  : autogen-libopts-5.18-5.el7.x86_64                            3/3 \n\nInstalled:\n  ntp.x86_64 0:4.2.6p5-29.el7.centos.2                                          \n\nDependency Installed:\n  autogen-libopts.x86_64 0:5.18-5.el7  ntpdate.x86_64 0:4.2.6p5-29.el7.centos.2 \n\nComplete!\n"
+    ]
+}
+192.168.56.165 | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": true,
+    "changes": {
+        "installed": [
+            "ntp"
+        ]
+    },
+    "msg": "",
+    "rc": 0,
+    "results": [
+        "Loaded plugins: fastestmirror\nLoading mirror speeds from cached hostfile\n * base: mirror.sale-dedic.com\n * epel: mirror.logol.ru\n * extras: mirror.sale-dedic.com\n * updates: mirror.docker.ru\nResolving Dependencies\n--> Running transaction check\n---> Package ntp.x86_64 0:4.2.6p5-29.el7.centos.2 will be installed\n--> Processing Dependency: ntpdate = 4.2.6p5-29.el7.centos.2 for package: ntp-4.2.6p5-29.el7.centos.2.x86_64\n--> Processing Dependency: libopts.so.25()(64bit) for package: ntp-4.2.6p5-29.el7.centos.2.x86_64\n--> Running transaction check\n---> Package autogen-libopts.x86_64 0:5.18-5.el7 will be installed\n---> Package ntpdate.x86_64 0:4.2.6p5-29.el7.centos.2 will be installed\n--> Finished Dependency Resolution\n\nDependencies Resolved\n\n================================================================================\n Package              Arch        Version                       Repository\n                                                                           Size\n================================================================================\nInstalling:\n ntp                  x86_64      4.2.6p5-29.el7.centos.2       base      549 k\nInstalling for dependencies:\n autogen-libopts      x86_64      5.18-5.el7                    base       66 k\n ntpdate              x86_64      4.2.6p5-29.el7.centos.2       base       87 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package (+2 Dependent packages)\n\nTotal download size: 701 k\nInstalled size: 1.6 M\nDownloading packages:\n--------------------------------------------------------------------------------\nTotal                                              1.5 MB/s | 701 kB  00:00     \nRunning transaction check\nRunning transaction test\nTransaction test succeeded\nRunning transaction\n  Installing : autogen-libopts-5.18-5.el7.x86_64                            1/3 \n  Installing : ntpdate-4.2.6p5-29.el7.centos.2.x86_64                       2/3 \n  Installing : ntp-4.2.6p5-29.el7.centos.2.x86_64                           3/3 \n  Verifying  : ntpdate-4.2.6p5-29.el7.centos.2.x86_64                       1/3 \n  Verifying  : ntp-4.2.6p5-29.el7.centos.2.x86_64                           2/3 \n  Verifying  : autogen-libopts-5.18-5.el7.x86_64                            3/3 \n\nInstalled:\n  ntp.x86_64 0:4.2.6p5-29.el7.centos.2                                          \n\nDependency Installed:\n  autogen-libopts.x86_64 0:5.18-5.el7  ntpdate.x86_64 0:4.2.6p5-29.el7.centos.2 \n\nComplete!\n"
+    ]
+}
+192.168.56.163 | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": true,
+    "changes": {
+        "installed": [
+            "ntp"
+        ]
+    },
+    "msg": "",
+    "rc": 0,
+    "results": [
+        "Loaded plugins: fastestmirror\nLoading mirror speeds from cached hostfile\n * base: mirror.yandex.ru\n * epel: mirror.logol.ru\n * extras: mirror.yandex.ru\n * updates: mirror.yandex.ru\nResolving Dependencies\n--> Running transaction check\n---> Package ntp.x86_64 0:4.2.6p5-29.el7.centos.2 will be installed\n--> Processing Dependency: ntpdate = 4.2.6p5-29.el7.centos.2 for package: ntp-4.2.6p5-29.el7.centos.2.x86_64\n--> Processing Dependency: libopts.so.25()(64bit) for package: ntp-4.2.6p5-29.el7.centos.2.x86_64\n--> Running transaction check\n---> Package autogen-libopts.x86_64 0:5.18-5.el7 will be installed\n---> Package ntpdate.x86_64 0:4.2.6p5-29.el7.centos.2 will be installed\n--> Finished Dependency Resolution\n\nDependencies Resolved\n\n================================================================================\n Package              Arch        Version                       Repository\n                                                                           Size\n================================================================================\nInstalling:\n ntp                  x86_64      4.2.6p5-29.el7.centos.2       base      549 k\nInstalling for dependencies:\n autogen-libopts      x86_64      5.18-5.el7                    base       66 k\n ntpdate              x86_64      4.2.6p5-29.el7.centos.2       base       87 k\n\nTransaction Summary\n================================================================================\nInstall  1 Package (+2 Dependent packages)\n\nTotal download size: 701 k\nInstalled size: 1.6 M\nDownloading packages:\n--------------------------------------------------------------------------------\nTotal                                              1.2 MB/s | 701 kB  00:00     \nRunning transaction check\nRunning transaction test\nTransaction test succeeded\nRunning transaction\n  Installing : autogen-libopts-5.18-5.el7.x86_64                            1/3 \n  Installing : ntpdate-4.2.6p5-29.el7.centos.2.x86_64                       2/3 \n  Installing : ntp-4.2.6p5-29.el7.centos.2.x86_64                           3/3 \n  Verifying  : ntpdate-4.2.6p5-29.el7.centos.2.x86_64                       1/3 \n  Verifying  : ntp-4.2.6p5-29.el7.centos.2.x86_64                           2/3 \n  Verifying  : autogen-libopts-5.18-5.el7.x86_64                            3/3 \n\nInstalled:\n  ntp.x86_64 0:4.2.6p5-29.el7.centos.2                                          \n\nDependency Installed:\n  autogen-libopts.x86_64 0:5.18-5.el7  ntpdate.x86_64 0:4.2.6p5-29.el7.centos.2 \n\nComplete!\n"
+    ]
+}
+```
+
+Make sure NTP daemon is up and running with its systemd service being
+enabled and not masked:
+
+```sh
+$ ansible clot -i inventory.cfg -b -m ansible.builtin.systemd -a "name=ntpd state=started masked=no enabled=yes"
+192.168.56.164 | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": true,
+    "enabled": true,
+    "name": "ntpd",
+    "state": "started",
+    (...)
+}
+192.168.56.165 | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": true,
+    "enabled": true,
+    "name": "ntpd",
+    "state": "started",
+    (...)
+}
+192.168.56.163 | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": true,
+    "enabled": true,
+    "name": "ntpd",
+    "state": "started",
+    (...)
+}
+```
+
+Turns out `ansible.builtin.service`
+[module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html)
+exists that picks the right init system based on the OS it is operating
+on; let’s use it instead:
+
+```sh
+$ ansible clot -i inventory.cfg -b -m ansible.builtin.service -a "name=ntpd state=started enabled=yes"
+192.168.56.165 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "enabled": true,
+    "name": "ntpd",
+    "state": "started",
+    "status": {
+        "ActiveEnterTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ActiveEnterTimestampMonotonic": "9725287828",
+        "ActiveExitTimestampMonotonic": "0",
+        "ActiveState": "active",
+        "After": "tmp.mount systemd-journald.socket system.slice ntpdate.service -.mount sntp.service syslog.target basic.target",
+        "AllowIsolate": "no",
+        "AmbientCapabilities": "0",
+        "AssertResult": "yes",
+        "AssertTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "AssertTimestampMonotonic": "9725263035",
+        "Before": "multi-user.target chronyd.service shutdown.target",
+        "BlockIOAccounting": "no",
+        "BlockIOWeight": "18446744073709551615",
+        "CPUAccounting": "no",
+        "CPUQuotaPerSecUSec": "infinity",
+        "CPUSchedulingPolicy": "0",
+        "CPUSchedulingPriority": "0",
+        "CPUSchedulingResetOnFork": "no",
+        "CPUShares": "18446744073709551615",
+        "CanIsolate": "no",
+        "CanReload": "no",
+        "CanStart": "yes",
+        "CanStop": "yes",
+        "CapabilityBoundingSet": "18446744073709551615",
+        "ConditionResult": "yes",
+        "ConditionTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ConditionTimestampMonotonic": "9725263035",
+        "ConflictedBy": "chronyd.service",
+        "Conflicts": "shutdown.target",
+        "ControlGroup": "/system.slice/ntpd.service",
+        "ControlPID": "0",
+        "DefaultDependencies": "yes",
+        "Delegate": "no",
+        "Description": "Network Time Service",
+        "DevicePolicy": "auto",
+        "EnvironmentFile": "/etc/sysconfig/ntpd (ignore_errors=yes)",
+        "ExecMainCode": "0",
+        "ExecMainExitTimestampMonotonic": "0",
+        "ExecMainPID": "16568",
+        "ExecMainStartTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ExecMainStartTimestampMonotonic": "9725287732",
+        "ExecMainStatus": "0",
+        "ExecStart": "{ path=/usr/sbin/ntpd ; argv[]=/usr/sbin/ntpd -u ntp:ntp $OPTIONS ; ignore_errors=no ; start_time=[Wed 2022-10-12 12:24:04 UTC] ; stop_time=[Wed 2022-10-12 12:24:04 UTC] ; pid=16567 ; code=exited ; status=0 }",
+        "FailureAction": "none",
+        "FileDescriptorStoreMax": "0",
+        "FragmentPath": "/usr/lib/systemd/system/ntpd.service",
+        "GuessMainPID": "yes",
+        "IOScheduling": "0",
+        "Id": "ntpd.service",
+        "IgnoreOnIsolate": "no",
+        "IgnoreOnSnapshot": "no",
+        "IgnoreSIGPIPE": "yes",
+        "InactiveEnterTimestampMonotonic": "0",
+        "InactiveExitTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "InactiveExitTimestampMonotonic": "9725267059",
+        "JobTimeoutAction": "none",
+        "JobTimeoutUSec": "0",
+        "KillMode": "control-group",
+        "KillSignal": "15",
+        "LimitAS": "18446744073709551615",
+        "LimitCORE": "18446744073709551615",
+        "LimitCPU": "18446744073709551615",
+        "LimitDATA": "18446744073709551615",
+        "LimitFSIZE": "18446744073709551615",
+        "LimitLOCKS": "18446744073709551615",
+        "LimitMEMLOCK": "65536",
+        "LimitMSGQUEUE": "819200",
+        "LimitNICE": "0",
+        "LimitNOFILE": "4096",
+        "LimitNPROC": "1889",
+        "LimitRSS": "18446744073709551615",
+        "LimitRTPRIO": "0",
+        "LimitRTTIME": "18446744073709551615",
+        "LimitSIGPENDING": "1889",
+        "LimitSTACK": "18446744073709551615",
+        "LoadState": "loaded",
+        "MainPID": "16568",
+        "MemoryAccounting": "no",
+        "MemoryCurrent": "18446744073709551615",
+        "MemoryLimit": "18446744073709551615",
+        "MountFlags": "0",
+        "Names": "ntpd.service",
+        "NeedDaemonReload": "no",
+        "Nice": "0",
+        "NoNewPrivileges": "no",
+        "NonBlocking": "no",
+        "NotifyAccess": "none",
+        "OOMScoreAdjust": "0",
+        "OnFailureJobMode": "replace",
+        "PermissionsStartOnly": "no",
+        "PrivateDevices": "no",
+        "PrivateNetwork": "no",
+        "PrivateTmp": "yes",
+        "ProtectHome": "no",
+        "ProtectSystem": "no",
+        "RefuseManualStart": "no",
+        "RefuseManualStop": "no",
+        "RemainAfterExit": "no",
+        "Requires": "-.mount basic.target system.slice",
+        "RequiresMountsFor": "/var/tmp",
+        "Restart": "no",
+        "RestartUSec": "100ms",
+        "Result": "success",
+        "RootDirectoryStartOnly": "no",
+        "RuntimeDirectoryMode": "0755",
+        "SameProcessGroup": "no",
+        "SecureBits": "0",
+        "SendSIGHUP": "no",
+        "SendSIGKILL": "yes",
+        "Slice": "system.slice",
+        "StandardError": "inherit",
+        "StandardInput": "null",
+        "StandardOutput": "journal",
+        "StartLimitAction": "none",
+        "StartLimitBurst": "5",
+        "StartLimitInterval": "10000000",
+        "StartupBlockIOWeight": "18446744073709551615",
+        "StartupCPUShares": "18446744073709551615",
+        "StatusErrno": "0",
+        "StopWhenUnneeded": "no",
+        "SubState": "running",
+        "SyslogLevelPrefix": "yes",
+        "SyslogPriority": "30",
+        "SystemCallErrorNumber": "0",
+        "TTYReset": "no",
+        "TTYVHangup": "no",
+        "TTYVTDisallocate": "no",
+        "TasksAccounting": "no",
+        "TasksCurrent": "18446744073709551615",
+        "TasksMax": "18446744073709551615",
+        "TimeoutStartUSec": "1min 30s",
+        "TimeoutStopUSec": "1min 30s",
+        "TimerSlackNSec": "50000",
+        "Transient": "no",
+        "Type": "forking",
+        "UMask": "0022",
+        "UnitFilePreset": "disabled",
+        "UnitFileState": "enabled",
+        "WantedBy": "multi-user.target",
+        "WatchdogTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "WatchdogTimestampMonotonic": "9725287776",
+        "WatchdogUSec": "0"
+    }
+}
+192.168.56.163 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "enabled": true,
+    "name": "ntpd",
+    "state": "started",
+    "status": {
+        "ActiveEnterTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ActiveEnterTimestampMonotonic": "10243821793",
+        "ActiveExitTimestampMonotonic": "0",
+        "ActiveState": "active",
+        "After": "basic.target tmp.mount sntp.service ntpdate.service systemd-journald.socket system.slice -.mount syslog.target",
+        "AllowIsolate": "no",
+        "AmbientCapabilities": "0",
+        "AssertResult": "yes",
+        "AssertTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "AssertTimestampMonotonic": "10243796504",
+        "Before": "shutdown.target chronyd.service multi-user.target",
+        "BlockIOAccounting": "no",
+        "BlockIOWeight": "18446744073709551615",
+        "CPUAccounting": "no",
+        "CPUQuotaPerSecUSec": "infinity",
+        "CPUSchedulingPolicy": "0",
+        "CPUSchedulingPriority": "0",
+        "CPUSchedulingResetOnFork": "no",
+        "CPUShares": "18446744073709551615",
+        "CanIsolate": "no",
+        "CanReload": "no",
+        "CanStart": "yes",
+        "CanStop": "yes",
+        "CapabilityBoundingSet": "18446744073709551615",
+        "ConditionResult": "yes",
+        "ConditionTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ConditionTimestampMonotonic": "10243796504",
+        "ConflictedBy": "chronyd.service",
+        "Conflicts": "shutdown.target",
+        "ControlGroup": "/system.slice/ntpd.service",
+        "ControlPID": "0",
+        "DefaultDependencies": "yes",
+        "Delegate": "no",
+        "Description": "Network Time Service",
+        "DevicePolicy": "auto",
+        "EnvironmentFile": "/etc/sysconfig/ntpd (ignore_errors=yes)",
+        "ExecMainCode": "0",
+        "ExecMainExitTimestampMonotonic": "0",
+        "ExecMainPID": "15948",
+        "ExecMainStartTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ExecMainStartTimestampMonotonic": "10243821734",
+        "ExecMainStatus": "0",
+        "ExecStart": "{ path=/usr/sbin/ntpd ; argv[]=/usr/sbin/ntpd -u ntp:ntp $OPTIONS ; ignore_errors=no ; start_time=[Wed 2022-10-12 12:24:04 UTC] ; stop_time=[Wed 2022-10-12 12:24:04 UTC] ; pid=15947 ; code=exited ; status=0 }",
+        "FailureAction": "none",
+        "FileDescriptorStoreMax": "0",
+        "FragmentPath": "/usr/lib/systemd/system/ntpd.service",
+        "GuessMainPID": "yes",
+        "IOScheduling": "0",
+        "Id": "ntpd.service",
+        "IgnoreOnIsolate": "no",
+        "IgnoreOnSnapshot": "no",
+        "IgnoreSIGPIPE": "yes",
+        "InactiveEnterTimestampMonotonic": "0",
+        "InactiveExitTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "InactiveExitTimestampMonotonic": "10243801160",
+        "JobTimeoutAction": "none",
+        "JobTimeoutUSec": "0",
+        "KillMode": "control-group",
+        "KillSignal": "15",
+        "LimitAS": "18446744073709551615",
+        "LimitCORE": "18446744073709551615",
+        "LimitCPU": "18446744073709551615",
+        "LimitDATA": "18446744073709551615",
+        "LimitFSIZE": "18446744073709551615",
+        "LimitLOCKS": "18446744073709551615",
+        "LimitMEMLOCK": "65536",
+        "LimitMSGQUEUE": "819200",
+        "LimitNICE": "0",
+        "LimitNOFILE": "4096",
+        "LimitNPROC": "1889",
+        "LimitRSS": "18446744073709551615",
+        "LimitRTPRIO": "0",
+        "LimitRTTIME": "18446744073709551615",
+        "LimitSIGPENDING": "1889",
+        "LimitSTACK": "18446744073709551615",
+        "LoadState": "loaded",
+        "MainPID": "15948",
+        "MemoryAccounting": "no",
+        "MemoryCurrent": "18446744073709551615",
+        "MemoryLimit": "18446744073709551615",
+        "MountFlags": "0",
+        "Names": "ntpd.service",
+        "NeedDaemonReload": "no",
+        "Nice": "0",
+        "NoNewPrivileges": "no",
+        "NonBlocking": "no",
+        "NotifyAccess": "none",
+        "OOMScoreAdjust": "0",
+        "OnFailureJobMode": "replace",
+        "PermissionsStartOnly": "no",
+        "PrivateDevices": "no",
+        "PrivateNetwork": "no",
+        "PrivateTmp": "yes",
+        "ProtectHome": "no",
+        "ProtectSystem": "no",
+        "RefuseManualStart": "no",
+        "RefuseManualStop": "no",
+        "RemainAfterExit": "no",
+        "Requires": "system.slice basic.target -.mount",
+        "RequiresMountsFor": "/var/tmp",
+        "Restart": "no",
+        "RestartUSec": "100ms",
+        "Result": "success",
+        "RootDirectoryStartOnly": "no",
+        "RuntimeDirectoryMode": "0755",
+        "SameProcessGroup": "no",
+        "SecureBits": "0",
+        "SendSIGHUP": "no",
+        "SendSIGKILL": "yes",
+        "Slice": "system.slice",
+        "StandardError": "inherit",
+        "StandardInput": "null",
+        "StandardOutput": "journal",
+        "StartLimitAction": "none",
+        "StartLimitBurst": "5",
+        "StartLimitInterval": "10000000",
+        "StartupBlockIOWeight": "18446744073709551615",
+        "StartupCPUShares": "18446744073709551615",
+        "StatusErrno": "0",
+        "StopWhenUnneeded": "no",
+        "SubState": "running",
+        "SyslogLevelPrefix": "yes",
+        "SyslogPriority": "30",
+        "SystemCallErrorNumber": "0",
+        "TTYReset": "no",
+        "TTYVHangup": "no",
+        "TTYVTDisallocate": "no",
+        "TasksAccounting": "no",
+        "TasksCurrent": "18446744073709551615",
+        "TasksMax": "18446744073709551615",
+        "TimeoutStartUSec": "1min 30s",
+        "TimeoutStopUSec": "1min 30s",
+        "TimerSlackNSec": "50000",
+        "Transient": "no",
+        "Type": "forking",
+        "UMask": "0022",
+        "UnitFilePreset": "disabled",
+        "UnitFileState": "enabled",
+        "WantedBy": "multi-user.target",
+        "WatchdogTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "WatchdogTimestampMonotonic": "10243821763",
+        "WatchdogUSec": "0"
+    }
+}
+192.168.56.164 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "enabled": true,
+    "name": "ntpd",
+    "state": "started",
+    "status": {
+        "ActiveEnterTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ActiveEnterTimestampMonotonic": "9970318925",
+        "ActiveExitTimestampMonotonic": "0",
+        "ActiveState": "active",
+        "After": "syslog.target systemd-journald.socket system.slice -.mount tmp.mount sntp.service basic.target ntpdate.service",
+        "AllowIsolate": "no",
+        "AmbientCapabilities": "0",
+        "AssertResult": "yes",
+        "AssertTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "AssertTimestampMonotonic": "9970289840",
+        "Before": "chronyd.service shutdown.target multi-user.target",
+        "BlockIOAccounting": "no",
+        "BlockIOWeight": "18446744073709551615",
+        "CPUAccounting": "no",
+        "CPUQuotaPerSecUSec": "infinity",
+        "CPUSchedulingPolicy": "0",
+        "CPUSchedulingPriority": "0",
+        "CPUSchedulingResetOnFork": "no",
+        "CPUShares": "18446744073709551615",
+        "CanIsolate": "no",
+        "CanReload": "no",
+        "CanStart": "yes",
+        "CanStop": "yes",
+        "CapabilityBoundingSet": "18446744073709551615",
+        "ConditionResult": "yes",
+        "ConditionTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ConditionTimestampMonotonic": "9970289839",
+        "ConflictedBy": "chronyd.service",
+        "Conflicts": "shutdown.target",
+        "ControlGroup": "/system.slice/ntpd.service",
+        "ControlPID": "0",
+        "DefaultDependencies": "yes",
+        "Delegate": "no",
+        "Description": "Network Time Service",
+        "DevicePolicy": "auto",
+        "EnvironmentFile": "/etc/sysconfig/ntpd (ignore_errors=yes)",
+        "ExecMainCode": "0",
+        "ExecMainExitTimestampMonotonic": "0",
+        "ExecMainPID": "15895",
+        "ExecMainStartTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "ExecMainStartTimestampMonotonic": "9970318818",
+        "ExecMainStatus": "0",
+        "ExecStart": "{ path=/usr/sbin/ntpd ; argv[]=/usr/sbin/ntpd -u ntp:ntp $OPTIONS ; ignore_errors=no ; start_time=[Wed 2022-10-12 12:24:04 UTC] ; stop_time=[Wed 2022-10-12 12:24:04 UTC] ; pid=15894 ; code=exited ; status=0 }",
+        "FailureAction": "none",
+        "FileDescriptorStoreMax": "0",
+        "FragmentPath": "/usr/lib/systemd/system/ntpd.service",
+        "GuessMainPID": "yes",
+        "IOScheduling": "0",
+        "Id": "ntpd.service",
+        "IgnoreOnIsolate": "no",
+        "IgnoreOnSnapshot": "no",
+        "IgnoreSIGPIPE": "yes",
+        "InactiveEnterTimestampMonotonic": "0",
+        "InactiveExitTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "InactiveExitTimestampMonotonic": "9970294737",
+        "JobTimeoutAction": "none",
+        "JobTimeoutUSec": "0",
+        "KillMode": "control-group",
+        "KillSignal": "15",
+        "LimitAS": "18446744073709551615",
+        "LimitCORE": "18446744073709551615",
+        "LimitCPU": "18446744073709551615",
+        "LimitDATA": "18446744073709551615",
+        "LimitFSIZE": "18446744073709551615",
+        "LimitLOCKS": "18446744073709551615",
+        "LimitMEMLOCK": "65536",
+        "LimitMSGQUEUE": "819200",
+        "LimitNICE": "0",
+        "LimitNOFILE": "4096",
+        "LimitNPROC": "1889",
+        "LimitRSS": "18446744073709551615",
+        "LimitRTPRIO": "0",
+        "LimitRTTIME": "18446744073709551615",
+        "LimitSIGPENDING": "1889",
+        "LimitSTACK": "18446744073709551615",
+        "LoadState": "loaded",
+        "MainPID": "15895",
+        "MemoryAccounting": "no",
+        "MemoryCurrent": "18446744073709551615",
+        "MemoryLimit": "18446744073709551615",
+        "MountFlags": "0",
+        "Names": "ntpd.service",
+        "NeedDaemonReload": "no",
+        "Nice": "0",
+        "NoNewPrivileges": "no",
+        "NonBlocking": "no",
+        "NotifyAccess": "none",
+        "OOMScoreAdjust": "0",
+        "OnFailureJobMode": "replace",
+        "PermissionsStartOnly": "no",
+        "PrivateDevices": "no",
+        "PrivateNetwork": "no",
+        "PrivateTmp": "yes",
+        "ProtectHome": "no",
+        "ProtectSystem": "no",
+        "RefuseManualStart": "no",
+        "RefuseManualStop": "no",
+        "RemainAfterExit": "no",
+        "Requires": "-.mount system.slice basic.target",
+        "RequiresMountsFor": "/var/tmp",
+        "Restart": "no",
+        "RestartUSec": "100ms",
+        "Result": "success",
+        "RootDirectoryStartOnly": "no",
+        "RuntimeDirectoryMode": "0755",
+        "SameProcessGroup": "no",
+        "SecureBits": "0",
+        "SendSIGHUP": "no",
+        "SendSIGKILL": "yes",
+        "Slice": "system.slice",
+        "StandardError": "inherit",
+        "StandardInput": "null",
+        "StandardOutput": "journal",
+        "StartLimitAction": "none",
+        "StartLimitBurst": "5",
+        "StartLimitInterval": "10000000",
+        "StartupBlockIOWeight": "18446744073709551615",
+        "StartupCPUShares": "18446744073709551615",
+        "StatusErrno": "0",
+        "StopWhenUnneeded": "no",
+        "SubState": "running",
+        "SyslogLevelPrefix": "yes",
+        "SyslogPriority": "30",
+        "SystemCallErrorNumber": "0",
+        "TTYReset": "no",
+        "TTYVHangup": "no",
+        "TTYVTDisallocate": "no",
+        "TasksAccounting": "no",
+        "TasksCurrent": "18446744073709551615",
+        "TasksMax": "18446744073709551615",
+        "TimeoutStartUSec": "1min 30s",
+        "TimeoutStopUSec": "1min 30s",
+        "TimerSlackNSec": "50000",
+        "Transient": "no",
+        "Type": "forking",
+        "UMask": "0022",
+        "UnitFilePreset": "disabled",
+        "UnitFileState": "enabled",
+        "WantedBy": "multi-user.target",
+        "WatchdogTimestamp": "Wed 2022-10-12 12:24:04 UTC",
+        "WatchdogTimestampMonotonic": "9970318874",
+        "WatchdogUSec": "0"
+    }
+}
+```
