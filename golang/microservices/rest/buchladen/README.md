@@ -20,3 +20,29 @@ manipulate such data:
 |   API   |       (\_____/)
 +---------+       (_______)
 ```
+
+[OAuth](https://www.rfc-editor.org/rfc/rfc6749) authorisation framework
+shall be used for user authentication. Since we’ve taken the
+microservice-oriented approach, we shall create a new NoSQL
+database—[Apache Cassandra](https://cassandra.apache.org) in this
+case—to be used in conjunction with our OAuth API to store access tokens
+and whatnot:
+
+```
+  _______
+ /       \
+( Cassan- )
+(   dra   )
+(\_______/)
+(_________)
+(_________)
+
+     ^
+     |
+     |
+     v
++---------+
+|  OAuth  |
+|   API   |
++---------+
+```
