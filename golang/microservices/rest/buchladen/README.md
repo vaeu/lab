@@ -46,3 +46,41 @@ and whatnot:
 |   API   |
 +---------+
 ```
+
+We also need to store the list of items users are selling at the moment
+or have already sold:
+
+```
++---------+
+|  Items  |
+|   API   |
++---------+
+     ^
+     |
+     |
+     v
+   _____
+  /     \
+ ( MySQL )
+ (\_____/)
+ (_______)
+
+```
+
+It may be a good idea for MySQL to synchronise against the
+[Elasticsearch](https://www.elastic.co/elasticsearch) RESTful search
+engine, with our items API taking input from both MySQL and ELS:
+
+```
+         +---------+
+     +-> |  Items  |
+     |   |   API   | <-+
+     |   +---------+   |
+     |                 |
+     v                 |
+   _____             _____
+  /     \           /     \
+ ( MySQL ) ------> (  ELS  )
+ (\_____/)         (\_____/)
+ (_______)         (_______)
+```
