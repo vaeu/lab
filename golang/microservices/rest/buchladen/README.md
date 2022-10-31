@@ -64,7 +64,6 @@ or have already sold:
  ( MySQL )
  (\_____/)
  (_______)
-
 ```
 
 It may be a good idea for MySQL to synchronise against the
@@ -83,4 +82,14 @@ engine, with our items API taking input from both MySQL and ELS:
  ( MySQL ) ------> (  ELS  )
  (\_____/)         (\_____/)
  (_______)         (_______)
+```
+
+Items API cannot be of much help to us if it doesn’t know what token is
+given to which user, so taking input from the OAuth API is paramount:
+
+```
++---------+        +---------+
+|  Items  | <----- |  OAuth  |
+|   API   |        |   API   |
++---------+        +---------+
 ```
