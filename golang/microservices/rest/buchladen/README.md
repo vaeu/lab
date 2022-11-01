@@ -93,3 +93,33 @@ given to which user, so taking input from the OAuth API is paramount:
 |   API   |        |   API   |
 +---------+        +---------+
 ```
+
+This is pretty much it. Here is the final overview of the design with
+all the elements being in one place:
+
+```
+                       _______
+                      /       \
+                     ( Cassan- )
+                     (   dra   )
+                     (\_______/)
+                     (_________)
+                          ^
+                          |
+                     +---------+
+                     |  Oauth  |
+              +----- |   API   | <---+
+              |      +---------+     |
+              v                      |
+         +---------+                 |              _____
+     +-> |  Items  |            +---------+        /     \
+     |   |   API   | <-+        |  Users  | <---> ( MySQL )
+     |   +---------+   |        |   API   |       (\_____/)
+     |                 |        +---------+       (_______)
+     v                 |
+   _____             _____
+  /     \           /     \
+ ( MySQL ) ------> (  ELS  )
+ (\_____/)         (\_____/)
+ (_______)         (_______)
+```
