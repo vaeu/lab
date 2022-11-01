@@ -1,7 +1,11 @@
 package app
 
-import "fmt"
+import "github.com/gin-gonic/gin"
+
+var router = gin.Default()
 
 func Start() {
-	fmt.Println("Hello!")
+	mapURLs()
+	router.SetTrustedProxies([]string{"127.0.0.1"})
+	router.Run(":8080")
 }
