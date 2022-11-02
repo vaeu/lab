@@ -1,4 +1,4 @@
-package controller
+package users
 
 import (
 	"net/http"
@@ -6,14 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateUser(c *gin.Context) {
+func Create(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "not implemented yet")
 }
 
-func GetUser(c *gin.Context) {
+func Get(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "not implemented yet")
 }
 
-func SearchUser(c *gin.Context) {
+func Search(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "not implemented yet")
 }

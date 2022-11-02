@@ -1,4 +1,4 @@
-package controller
+package ping
 
 import (
 	"net/http"
@@ -6,6 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Ping(c *gin.Context) {
+func Query(c *gin.Context) {
 	c.String(http.StatusOK, "pong")
 }
