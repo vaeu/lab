@@ -1,8 +1,6 @@
 package users
 
 import (
-	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,12 +10,7 @@ import (
 
 func Create(c *gin.Context) {
 	var user users.User
-	bytes, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		// handle invalid body request
-		return
-	}
-	if err := json.Unmarshal(bytes, &user); err != nil {
+	if err := c.ShouldBindJSON(&user); err != nil {
 		// handle invalid JSON request
 		return
 	}
