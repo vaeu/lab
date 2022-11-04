@@ -5,13 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/model/users"
+	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/utils/errors"
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/view/services"
 )
 
 func Create(c *gin.Context) {
 	var user users.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		// handle invalid JSON request
+		restErr := errors.NewBadRequest("invalid JSON body")
+		c.JSON(restErr.Status, restErr)
 		return
 	}
 
