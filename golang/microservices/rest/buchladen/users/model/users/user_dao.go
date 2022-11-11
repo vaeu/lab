@@ -22,3 +22,15 @@ func (u *User) Get() *errors.RESTErr {
 
 	return nil
 }
+
+func (u *User) Save() *errors.RESTErr {
+	currentUser := usersDB[u.ID]
+	if currentUser != nil {
+		if currentUser.Email == u.Email {
+			return errors.NewBadRequest(fmt.Sprintf("email address is already taken: %s", u.Email))
+		}
+		return errors.NewBadRequest(fmt.Sprintf("user already exists: %d", u.ID))
+	}
+	currentUser = u.ID
+	return nil
+}
