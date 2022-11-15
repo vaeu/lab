@@ -31,6 +31,6 @@ func (u *User) Save() *errors.RESTErr {
 		}
 		return errors.NewBadRequest(fmt.Sprintf("user already exists: %d", u.ID))
 	}
-	currentUser = u.ID
+	usersDB[u.ID] = u
 	return nil
 }

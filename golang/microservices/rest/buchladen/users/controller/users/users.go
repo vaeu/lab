@@ -19,7 +19,7 @@ func Create(c *gin.Context) {
 
 	result, err := services.CreateUser(user)
 	if err != nil {
-		// handle invalid user creation
+		c.JSON(err.Status, err)
 		return
 	}
 	c.JSON(http.StatusCreated, result)
