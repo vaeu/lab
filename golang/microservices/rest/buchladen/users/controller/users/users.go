@@ -2,6 +2,7 @@ package users
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/model/users"
@@ -26,7 +27,19 @@ func Create(c *gin.Context) {
 }
 
 func Get(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yet")
+	uID, err := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	if err != nil {
+		err := errors.NewBadRequest("used ID is expected to be a number")
+		c.JSON(err.Status, err)
+		return
+	}
+
+	user, getErr := services.GetUser(uID)
+	if getErr != nil {
+		c.JSON(getErr.Status, getErr)
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }
 
 func Search(c *gin.Context) {
