@@ -3,6 +3,7 @@ package users
 import (
 	"fmt"
 
+	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/utils/dates"
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/utils/errors"
 )
 
@@ -31,6 +32,9 @@ func (u *User) Save() *errors.RESTErr {
 		}
 		return errors.NewBadRequest(fmt.Sprintf("user already exists: %d", u.ID))
 	}
+
+	u.DateCreated = dates.GetNowString()
+
 	usersDB[u.ID] = u
 	return nil
 }
