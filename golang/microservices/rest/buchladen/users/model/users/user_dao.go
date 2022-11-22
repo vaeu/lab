@@ -3,6 +3,7 @@ package users
 import (
 	"fmt"
 
+	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/db/mysql/usersdb"
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/utils/dates"
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/utils/errors"
 )
@@ -10,6 +11,10 @@ import (
 var usersDB = make(map[uint64]*User)
 
 func (u *User) Get() *errors.RESTErr {
+	if err := usersdb.Client.Ping(); err != nil {
+		panic(err)
+	}
+
 	res := usersDB[u.ID]
 	if res == nil {
 		errors.NewNotFound(fmt.Sprintf("user not found: %d", u.ID))
