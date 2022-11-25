@@ -2,10 +2,16 @@ package users
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/db/mysql/usersdb"
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/utils/dates"
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/utils/errors"
+)
+
+const (
+	indexUniqueEmail = "email_UNIQUE"
+	queryInsertUser  = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
 )
 
 var usersDB = make(map[uint64]*User)
@@ -30,16 +36,33 @@ func (u *User) Get() *errors.RESTErr {
 }
 
 func (u *User) Save() *errors.RESTErr {
-	currentUser := usersDB[u.ID]
-	if currentUser != nil {
-		if currentUser.Email == u.Email {
-			return errors.NewBadRequest(fmt.Sprintf("email address is already taken: %s", u.Email))
-		}
-		return errors.NewBadRequest(fmt.Sprintf("user already exists: %d", u.ID))
+	stmt, err := usersdb.Client.Prepare(queryInsertUser)
+	defer stmt.Close()
+	if err != nil {
+		errors.NewInternalServerError(err.Error())
 	}
 
 	u.DateCreated = dates.GetNowString()
 
-	usersDB[u.ID] = u
+	insertResult, err := stmt.Exec(
+		u.FirstName, u.LastName, u.Email, u.DateCreated,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), indexUniqueEmail) {
+			return errors.NewBadRequest(fmt.Sprintf("email address is already taken: %s", u.Email))
+		}
+		return errors.NewInternalServerError(
+			fmt.Sprintf("unable to save user: %s\n", err.Error()),
+		)
+	}
+
+	uID, err := insertResult.LastInsertId()
+	if err != nil {
+		return errors.NewInternalServerError(
+			fmt.Sprintf("unable to save user: %s\n", err.Error()),
+		)
+	}
+	u.ID = uint64(uID)
+
 	return nil
 }
