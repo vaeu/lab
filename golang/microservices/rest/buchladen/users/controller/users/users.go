@@ -45,3 +45,28 @@ func Get(c *gin.Context) {
 func Search(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "not implemented yet")
 }
+
+func Update(c *gin.Context) {
+	uID, err := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	if err != nil {
+		err := errors.NewBadRequest("user ID is expected to be a number")
+		c.JSON(err.Status, err)
+		return
+	}
+
+	var user users.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		restErr := errors.NewBadRequest("invalid JSON body")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	user.ID = uID
+
+	result, nerr := services.UpdateUser(user)
+	if nerr != nil {
+		c.JSON(nerr.Status, nerr)
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}

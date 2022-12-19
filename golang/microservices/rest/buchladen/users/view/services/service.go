@@ -22,3 +22,19 @@ func CreateUser(u users.User) (*users.User, *errors.RESTErr) {
 	}
 	return &u, nil
 }
+
+func UpdateUser(u users.User) (*users.User, *errors.RESTErr) {
+	current, err := GetUser(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	current.FirstName = u.FirstName
+	current.LastName = u.LastName
+	current.Email = u.Email
+
+	if err := current.Update(); err != nil {
+		return nil, err
+	}
+	return current, nil
+}
