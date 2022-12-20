@@ -38,3 +38,8 @@ func UpdateUser(u users.User) (*users.User, *errors.RESTErr) {
 	}
 	return current, nil
 }
+
+func DeleteUser(uID uint64) *errors.RESTErr {
+	user := &users.User{ID: uID}
+	return user.Delete()
+}

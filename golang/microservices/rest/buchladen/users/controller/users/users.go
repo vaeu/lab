@@ -10,6 +10,14 @@ import (
 	"github.com/vaeu/lab/golang/microservices/rest/buchladen/users/view/services"
 )
 
+func getUserID(userIDParam string) (uint64, *errors.RESTErr) {
+	uID, err := strconv.ParseUint(userIDParam, 10, 64)
+	if err != nil {
+		return 0, errors.NewBadRequest("user ID is expected to be a number")
+	}
+	return uID, nil
+}
+
 func Create(c *gin.Context) {
 	var user users.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -27,13 +35,11 @@ func Create(c *gin.Context) {
 }
 
 func Get(c *gin.Context) {
-	uID, err := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	uID, err := getUserID(c.Param("user_id"))
 	if err != nil {
-		err := errors.NewBadRequest("user ID is expected to be a number")
 		c.JSON(err.Status, err)
 		return
 	}
-
 	user, getErr := services.GetUser(uID)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
@@ -47,9 +53,8 @@ func Search(c *gin.Context) {
 }
 
 func Update(c *gin.Context) {
-	uID, err := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	uID, err := getUserID(c.Param("user_id"))
 	if err != nil {
-		err := errors.NewBadRequest("user ID is expected to be a number")
 		c.JSON(err.Status, err)
 		return
 	}
@@ -69,4 +74,18 @@ func Update(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, result)
+}
+
+func Delete(c *gin.Context) {
+	uID, err := getUserID(c.Param("user_id"))
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+
+	if err := services.DeleteUser(uID); err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, map[string]string{"status": "gone"})
 }
